@@ -2,13 +2,14 @@ import { useState, useEffect } from 'react'
 import axios from 'axios'
 import './App.css'
 
+// --- KRİTİK GÜNCELLEME: Render adresini buraya yazdık ---
+const API_URL = "https://turkish-house-price-prediction.onrender.com";
+
 function App() {
-  // Şehir ve İlçe Listesi (Backend'den gelecek)
   const [locations, setLocations] = useState({})
   const [cities, setCities] = useState([])
   const [districts, setDistricts] = useState([])
 
-  // Kullanıcı Seçimleri
   const [selectedCity, setSelectedCity] = useState('')
   const [selectedDistrict, setSelectedDistrict] = useState('')
   const [formData, setFormData] = useState({
@@ -21,22 +22,25 @@ function App() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
-  // 1. Uygulama açılınca Şehirleri Getir
+  // 1. Şehirleri Canlı API'den Getir
   useEffect(() => {
-    axios.get('http://127.0.0.1:8000/cities')
+    // Burada API_URL değişkenini kullandık
+    axios.get(`${API_URL}/cities`)
       .then(res => {
         setLocations(res.data)
-        setCities(Object.keys(res.data)) // Sadece şehir isimlerini al
+        setCities(Object.keys(res.data))
       })
-      .catch(err => console.error("Şehirler yüklenemedi:", err))
+      .catch(err => {
+        console.error("Şehirler yüklenemedi:", err);
+        setError("Sunucuya bağlanılamadı. Lütfen daha sonra tekrar deneyin.");
+      })
   }, [])
 
-  // 2. Şehir Seçilince İlçeleri Güncelle
   const handleCityChange = (e) => {
     const city = e.target.value
     setSelectedCity(city)
-    setDistricts(locations[city] || []) // O şehrin ilçelerini al
-    setSelectedDistrict('') // Eski ilçe seçimini sıfırla
+    setDistricts(locations[city] || [])
+    setSelectedDistrict('')
   }
 
   const handleChange = (e) => {
@@ -64,10 +68,11 @@ function App() {
     }
 
     try {
-      const response = await axios.post('http://127.0.0.1:8000/predict', payload)
+      // Burada da API_URL değişkenini kullandık
+      const response = await axios.post(`${API_URL}/predict`, payload)
       setResult(response.data)
     } catch (err) {
-      setError('Hata: Sunucuya bağlanılamadı.')
+      setError('Hata: Tahmin yapılamadı. Sunucu yanıt vermiyor olabilir.');
     } finally {
       setLoading(false)
     }
@@ -81,8 +86,6 @@ function App() {
 
         <form onSubmit={handleSubmit}>
           <div className="grid">
-            
-            {/* Şehir Seçimi */}
             <div className="input-group">
               <label>Şehir</label>
               <select value={selectedCity} onChange={handleCityChange} required>
@@ -93,7 +96,6 @@ function App() {
               </select>
             </div>
 
-            {/* İlçe Seçimi (Şehir seçilince aktif olur) */}
             <div className="input-group">
               <label>İlçe</label>
               <select 
